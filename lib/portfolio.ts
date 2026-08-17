@@ -88,24 +88,33 @@ export type PortfolioData = {
  */
 export async function getPortfolio(): Promise<PortfolioData> {
   const SERVER_URL = process.env.NEXT_PUBLIC_SERVER_URL;
-  const res = await fetch(`${SERVER_URL}/api/portfolio`, {
-    cache: "no-store",
-  });
-  if (!res.ok) {
-    throw new Error(`Portfolio API responded ${res.status}`);
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 8000);
+  try {
+    const res = await fetch(`${SERVER_URL}/api/portfolio`, {
+      cache: "no-store",
+      signal: controller.signal,
+    });
+    clearTimeout(timeout);
+    if (!res.ok) {
+      throw new Error(`Portfolio API responded ${res.status}`);
+    }
+    const data = (await res.json()) as Partial<PortfolioData>;
+    return {
+      ...(data as PortfolioData),
+      year: data.year ?? new Date().getFullYear(),
+      deployDate:
+        data.deployDate ??
+        new Date().toLocaleDateString("en-US", {
+          year: "numeric",
+          month: "short",
+          day: "numeric",
+        }),
+    };
+  } catch (err) {
+    clearTimeout(timeout);
+    throw err;
   }
-  const data = (await res.json()) as Partial<PortfolioData>;
-  return {
-    ...(data as PortfolioData),
-    year: data.year ?? new Date().getFullYear(),
-    deployDate:
-      data.deployDate ??
-      new Date().toLocaleDateString("en-US", {
-        year: "numeric",
-        month: "short",
-        day: "numeric",
-      }),
-  };
 }
 
 export type ResumeStatus = {
@@ -121,10 +130,14 @@ export type ResumeStatus = {
  */
 export async function getResumeStatus(): Promise<ResumeStatus> {
   const SERVER_URL = process.env.NEXT_PUBLIC_SERVER_URL;
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 5000);
   try {
     const res = await fetch(`${SERVER_URL}/api/resume/status`, {
       cache: "no-store",
+      signal: controller.signal,
     });
+    clearTimeout(timeout);
     if (!res.ok) return { exists: false, filename: null, url: null };
     const data = (await res.json()) as {
       exists: boolean;
@@ -136,6 +149,7 @@ export async function getResumeStatus(): Promise<ResumeStatus> {
       url: data.exists ? `${SERVER_URL}/api/resume` : null,
     };
   } catch {
+    clearTimeout(timeout);
     return { exists: false, filename: null, url: null };
   }
 }
