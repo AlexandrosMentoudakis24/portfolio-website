@@ -25,6 +25,12 @@ export const metadata: Metadata = {
   title: "Alexandros Mentoudakis — Full-Stack Developer",
   description:
     "Alexandros Mentoudakis — Full-Stack Developer. React, Node, Python, PostgreSQL, AWS. Available for new roles.",
+  icons: {
+    icon: "/favicon.svg",
+    shortcut: "/favicon.svg",
+    apple: "/apple-touch-icon.svg",
+  },
+  manifest: "/site.webmanifest",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
