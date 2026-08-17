@@ -31,7 +31,10 @@ export default function SiteInteractions() {
       let i = 0;
       function next() {
         if (i >= lines.length) {
-          setTimeout(() => boot.classList.add("hidden"), 420);
+          setTimeout(() => {
+            boot.classList.add("hidden");
+            window.dispatchEvent(new Event("boot-complete"));
+          }, 420);
           return;
         }
         const l = document.createElement("div");
