@@ -1,3 +1,6 @@
+import { getPortfolio as getPortfolioFromDB } from "./models/portfolio";
+import { getResumeStatus as getResumeStatusFromDB } from "./models/resume";
+
 export type Readout = {
   label: string;
   value: string;
@@ -83,36 +86,29 @@ export type PortfolioData = {
 
 /**
  * Data source for the public site. Fetches the live portfolio from the
- * portfolio server. If the server is unreachable the call throws so the page
+ * database directly. If the database is unreachable the call throws so the page
  * can show an "under construction" state instead of rendering stale data.
  */
 export async function getPortfolio(): Promise<PortfolioData> {
-  const SERVER_URL = process.env.NEXT_PUBLIC_SERVER_URL;
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 8000);
   try {
-    const res = await fetch(`${SERVER_URL}/api/portfolio`, {
-      cache: "no-store",
-      signal: controller.signal,
-    });
-    clearTimeout(timeout);
-    if (!res.ok) {
-      throw new Error(`Portfolio API responded ${res.status}`);
+    const doc = await getPortfolioFromDB();
+    if (!doc) {
+      throw new Error("No portfolio found in database");
     }
-    const data = (await res.json()) as Partial<PortfolioData>;
+    const { _id, __v, createdAt, updatedAt, ...rest } = doc as Record<
+      string,
+      unknown
+    > & { _id: unknown; __v?: number; };
     return {
-      ...(data as PortfolioData),
-      year: data.year ?? new Date().getFullYear(),
-      deployDate:
-        data.deployDate ??
-        new Date().toLocaleDateString("en-US", {
-          year: "numeric",
-          month: "short",
-          day: "numeric",
-        }),
+      ...(rest as Omit<PortfolioData, "year" | "deployDate">),
+      year: new Date().getFullYear(),
+      deployDate: new Date().toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+      }),
     };
   } catch (err) {
-    clearTimeout(timeout);
     throw err;
   }
 }
@@ -124,32 +120,18 @@ export type ResumeStatus = {
 };
 
 /**
- * Reports whether a downloadable résumé PDF has been uploaded to the server.
- * Returns the absolute download URL (same server that serves the API) so the
- * public site can link to it directly.
+ * Reports whether a downloadable résumé PDF has been uploaded to the database.
+ * Returns the download URL for the public site to link to it directly.
  */
 export async function getResumeStatus(): Promise<ResumeStatus> {
-  const SERVER_URL = process.env.NEXT_PUBLIC_SERVER_URL;
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 5000);
   try {
-    const res = await fetch(`${SERVER_URL}/api/resume/status`, {
-      cache: "no-store",
-      signal: controller.signal,
-    });
-    clearTimeout(timeout);
-    if (!res.ok) return { exists: false, filename: null, url: null };
-    const data = (await res.json()) as {
-      exists: boolean;
-      filename: string | null;
-    };
+    const data = await getResumeStatusFromDB();
     return {
       exists: data.exists,
       filename: data.filename,
-      url: data.exists ? `${SERVER_URL}/api/resume` : null,
+      url: data.exists ? "/api/resume" : null,
     };
   } catch {
-    clearTimeout(timeout);
     return { exists: false, filename: null, url: null };
   }
 }
