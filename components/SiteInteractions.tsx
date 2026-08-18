@@ -13,7 +13,7 @@ export default function SiteInteractions() {
     const logEl = document.getElementById("boot-log");
     const lines = [
       { t: "$ initializing portfolio environment", ok: false },
-      { t: "$ loading profile: alex-mentoudakis.dev", ok: false },
+      { t: "$ loading profile: alexdandros-mentoudakis.dev", ok: false },
       { t: "  ✓ resolved identity, skills, history", ok: true },
       { t: "$ mounting sections [about, stack, experience, projects, contact]", ok: false },
       { t: "  ✓ 5 sections mounted", ok: true },
