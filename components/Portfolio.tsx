@@ -5,7 +5,6 @@ import {
   LinkedInIcon,
   EmailIcon,
   ExternalLinkIcon,
-  DownloadIcon,
   MailIcon,
   MenuIcon,
 } from "./icons";
