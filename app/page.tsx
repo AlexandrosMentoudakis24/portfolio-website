@@ -1,3 +1,4 @@
+import { Analytics } from '@vercel/analytics/next';
 import { getPortfolio, getResumeStatus } from "@/lib/portfolio";
 import Portfolio from "@/components/Portfolio";
 
@@ -44,6 +45,7 @@ function UnderConstruction() {
       >
         Portfolio service unavailable
       </div>
+
     </div>
   );
 }
@@ -54,7 +56,11 @@ export default async function Home() {
       getPortfolio(),
       getResumeStatus(),
     ]);
-    return <Portfolio data={data} resume={resume} />;
+    return <>
+      <Portfolio data={data} resume={resume} />
+      <Analytics />
+
+    </>;
   } catch {
     return <UnderConstruction />;
   }
